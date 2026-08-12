@@ -6,6 +6,11 @@ About this web app: **Creatorverse is a curated field guide to online creators w
 
 Time spent: 11 hours
 
+## Live Demo
+
+- [Creatorverse on Azure](https://brave-water-0ab07af10.7.azurestaticapps.net/)
+- [GitHub repository](https://github.com/BIngram17/creatorverse)
+
 ## Tech Stack
 
 - React 19
@@ -14,6 +19,7 @@ Time spent: 11 hours
 - Supabase and `@supabase/supabase-js`
 - PicoCSS
 - Custom responsive CSS
+- Azure Static Web Apps with GitHub Actions CI/CD
 
 ## Project Requirement Audit
 
