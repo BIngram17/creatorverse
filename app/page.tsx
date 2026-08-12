@@ -1,5 +1,5 @@
 import { CreatorApp } from "./CreatorApp";
 
 export default function Home() {
-  return <CreatorApp mode="list" />;
+  return <CreatorApp initialPath="/" />;
 }

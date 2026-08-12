@@ -1,5 +1,5 @@
 import { CreatorApp } from "../CreatorApp";
 
 export default function AddCreatorPage() {
-  return <CreatorApp mode="add" />;
+  return <CreatorApp initialPath="/add" />;
 }

@@ -1,27 +1,10 @@
 "use client";
 
 import { FormEvent, useEffect, useState } from "react";
-
-export type Creator = {
-  id: number;
-  name: string;
-  url: string;
-  description: string;
-  imageUrl: string;
-  category: string;
-  createdAt: string;
-};
-
-type Mode = "list" | "detail" | "add" | "edit";
+import { BrowserRouter, Link, StaticRouter, useNavigate, useParams, useRoutes } from "react-router-dom";
+import { addCreator, deleteCreator, getCreator, getCreators, updateCreator, type Creator } from "../src/creatorService";
 
 const emptyForm = { name: "", url: "", description: "", imageUrl: "", category: "" };
-
-async function api<T>(url: string, options?: RequestInit): Promise<T> {
-  const response = await fetch(url, options);
-  const data = (await response.json()) as T & { error?: string };
-  if (!response.ok) throw new Error(data.error || "Something went wrong");
-  return data;
-}
 
 function Arrow({ direction = "right" }: { direction?: "right" | "left" }) {
   return <span aria-hidden="true">{direction === "right" ? "↗" : "←"}</span>;
@@ -30,13 +13,13 @@ function Arrow({ direction = "right" }: { direction?: "right" | "left" }) {
 function Header() {
   return (
     <header className="site-header">
-      <a className="brand" href="/" aria-label="Creatorverse home">
+      <Link className="brand" to="/" aria-label="Creatorverse home">
         <span className="brand-mark">C/V</span>
         <span>Creatorverse</span>
-      </a>
-      <a className="header-cta" href="/add">
+      </Link>
+      <Link className="header-cta" to="/add">
         <span>Add a creator</span><span aria-hidden="true">＋</span>
-      </a>
+      </Link>
     </header>
   );
 }
@@ -51,7 +34,7 @@ function ErrorState({ message }: { message: string }) {
       <p className="eyebrow">SIGNAL LOST</p>
       <h1>We couldn’t load this page.</h1>
       <p>{message}</p>
-      <a className="primary-button" href="/">Back to the directory</a>
+      <Link className="primary-button" to="/">Back to the directory</Link>
     </main>
   );
 }
@@ -62,8 +45,8 @@ function CreatorList() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api<{ creators: Creator[] }>("/api/creators")
-      .then((data) => setCreators(data.creators))
+    getCreators()
+      .then(setCreators)
       .catch((err: Error) => setError(err.message))
       .finally(() => setLoading(false));
   }, []);
@@ -75,8 +58,8 @@ function CreatorList() {
     <main>
       <section className="hero">
         <div>
-          <p className="eyebrow">YOUR NEXT FAVORITE FOLLOW</p>
-          <h1>Good internet.<br/><em>Found here.</em></h1>
+          <p className="eyebrow">YOUR INTERNET, INTENTIONALLY</p>
+          <h1>Curate your corner<br/><em>of the internet.</em></h1>
         </div>
         <div className="hero-note">
           <span className="orbit-dot" />
@@ -94,14 +77,14 @@ function CreatorList() {
         <div className="creator-grid">
           {creators.map((creator, index) => (
             <article className="creator-card" key={creator.id}>
-              <a className="card-image" href={`/creator/${creator.id}`} aria-label={`View ${creator.name}`}>
+              <Link className="card-image" to={`/creator/${creator.id}`} aria-label={`View ${creator.name}`}>
                 <img src={creator.imageUrl} alt="" />
                 <span className="card-index">{String(index + 1).padStart(2, "0")}</span>
                 <span className="card-arrow"><Arrow /></span>
-              </a>
+              </Link>
               <div className="card-copy">
                 <p className="tag">{creator.category || "Creator"}</p>
-                <h3><a href={`/creator/${creator.id}`}>{creator.name}</a></h3>
+                <h3><Link to={`/creator/${creator.id}`}>{creator.name}</Link></h3>
                 <p>{creator.description}</p>
                 <a className="text-link" href={creator.url} target="_blank" rel="noreferrer">
                   Visit channel <Arrow />
@@ -110,34 +93,43 @@ function CreatorList() {
             </article>
           ))}
         </div>
+        {creators.length === 0 && (
+          <div className="empty-directory">
+            <p className="eyebrow">NO CREATORS YET</p>
+            <h3>Start your universe.</h3>
+            <p>Add the first creator you think deserves more attention.</p>
+            <Link className="channel-button" to="/add">Add a creator <Arrow /></Link>
+          </div>
+        )}
       </section>
 
       <section className="add-banner">
         <p className="eyebrow">KNOW SOMEONE BRILLIANT?</p>
         <h2>Grow the universe.</h2>
-        <a className="circle-button" href="/add" aria-label="Add a creator"><span>＋</span></a>
+        <Link className="circle-button" to="/add" aria-label="Add a creator"><span>＋</span></Link>
       </section>
     </main>
   );
 }
 
 function CreatorDetail({ id }: { id: string }) {
+  const navigate = useNavigate();
   const [creator, setCreator] = useState<Creator | null>(null);
   const [error, setError] = useState("");
   const [deleting, setDeleting] = useState(false);
   const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
-    api<{ creator: Creator }>(`/api/creators/${id}`)
-      .then((data) => setCreator(data.creator))
+    getCreator(id)
+      .then(setCreator)
       .catch((err: Error) => setError(err.message));
   }, [id]);
 
   async function removeCreator() {
     setDeleting(true);
     try {
-      await api(`/api/creators/${id}`, { method: "DELETE" });
-      window.location.href = "/";
+      await deleteCreator(id);
+      navigate("/");
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not delete creator");
       setDeleting(false);
@@ -149,7 +141,7 @@ function CreatorDetail({ id }: { id: string }) {
 
   return (
     <main className="detail-page">
-      <a className="back-link" href="/"><Arrow direction="left" /> All creators</a>
+      <Link className="back-link" to="/"><Arrow direction="left" /> All creators</Link>
       <section className="detail-layout">
         <div className="detail-image">
           <img src={creator.imageUrl} alt={`${creator.name} featured content`} />
@@ -163,7 +155,7 @@ function CreatorDetail({ id }: { id: string }) {
             Visit their channel <Arrow />
           </a>
           <div className="detail-actions">
-            <a href={`/creator/${creator.id}/edit`}>Edit profile</a>
+            <Link to={`/creator/${creator.id}/edit`}>Edit profile</Link>
             <button type="button" onClick={() => setConfirming(true)}>Delete creator</button>
           </div>
         </div>
@@ -187,6 +179,7 @@ function CreatorDetail({ id }: { id: string }) {
 }
 
 function CreatorForm({ mode, id }: { mode: "add" | "edit"; id?: string }) {
+  const navigate = useNavigate();
   const [form, setForm] = useState(emptyForm);
   const [loading, setLoading] = useState(mode === "edit");
   const [saving, setSaving] = useState(false);
@@ -194,8 +187,8 @@ function CreatorForm({ mode, id }: { mode: "add" | "edit"; id?: string }) {
 
   useEffect(() => {
     if (mode === "edit" && id) {
-      api<{ creator: Creator }>(`/api/creators/${id}`)
-        .then(({ creator }) => setForm({
+      getCreator(id)
+        .then((creator) => setForm({
           name: creator.name, url: creator.url, description: creator.description,
           imageUrl: creator.imageUrl, category: creator.category,
         }))
@@ -209,13 +202,8 @@ function CreatorForm({ mode, id }: { mode: "add" | "edit"; id?: string }) {
     setSaving(true);
     setError("");
     try {
-      const endpoint = mode === "add" ? "/api/creators" : `/api/creators/${id}`;
-      const data = await api<{ creator: Creator }>(endpoint, {
-        method: mode === "add" ? "POST" : "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
-      window.location.href = `/creator/${data.creator.id}`;
+      const creator = mode === "add" ? await addCreator(form) : await updateCreator(id!, form);
+      navigate(`/creator/${creator.id}`);
     } catch (err) {
       setError(err instanceof Error ? err.message : "Could not save creator");
       setSaving(false);
@@ -226,7 +214,7 @@ function CreatorForm({ mode, id }: { mode: "add" | "edit"; id?: string }) {
 
   return (
     <main className="form-page">
-      <a className="back-link" href={mode === "edit" ? `/creator/${id}` : "/"}><Arrow direction="left" /> Cancel</a>
+      <Link className="back-link" to={mode === "edit" ? `/creator/${id}` : "/"}><Arrow direction="left" /> Cancel</Link>
       <div className="form-layout">
         <div className="form-intro">
           <p className="eyebrow">{mode === "add" ? "EXPAND THE UNIVERSE" : "REFINE THE PROFILE"}</p>
@@ -251,14 +239,39 @@ function CreatorForm({ mode, id }: { mode: "add" | "edit"; id?: string }) {
   );
 }
 
-export function CreatorApp({ mode, id }: { mode: Mode; id?: string }) {
+function DetailRoute() {
+  const { id } = useParams();
+  return id ? <CreatorDetail id={id} /> : <ErrorState message="Creator not found" />;
+}
+
+function EditRoute() {
+  const { id } = useParams();
+  return id ? <CreatorForm mode="edit" id={id} /> : <ErrorState message="Creator not found" />;
+}
+
+function CreatorRoutes() {
+  return useRoutes([
+    { path: "/", element: <CreatorList /> },
+    { path: "/add", element: <CreatorForm mode="add" /> },
+    { path: "/creator/:id", element: <DetailRoute /> },
+    { path: "/creator/:id/edit", element: <EditRoute /> },
+    { path: "*", element: <ErrorState message="That page does not exist." /> },
+  ]);
+}
+
+function CreatorShell() {
   return (
     <div className="app-shell">
       <Header />
-      {mode === "list" && <CreatorList />}
-      {mode === "detail" && id && <CreatorDetail id={id} />}
-      {(mode === "add" || mode === "edit") && <CreatorForm mode={mode} id={id} />}
+      <CreatorRoutes />
       <footer><span>CREATORVERSE © 2026</span><span>Curate your internet.</span></footer>
     </div>
   );
+}
+
+export function CreatorApp({ initialPath }: { initialPath: string }) {
+  if (typeof window === "undefined") {
+    return <StaticRouter location={initialPath}><CreatorShell /></StaticRouter>;
+  }
+  return <BrowserRouter><CreatorShell /></BrowserRouter>;
 }
