@@ -4,7 +4,7 @@ Submitted by: **BIngram17**
 
 About this web app: **Creatorverse is a curated field guide to online creators worth following. Users can browse creator cards, open a unique profile for each creator, visit their channel, and add, edit, or remove recommendations.**
 
-Time spent: **[enter your total]** hours
+Time spent: 11 hours
 
 ## Tech Stack
 
