@@ -116,7 +116,6 @@ Following the WEB103 prework instructions, Row Level Security is disabled on thi
 
 The most involved part was connecting persistent Supabase operations to the editorial visual design consistently across the creator directory, detail pages, forms, loading states, and mobile layouts while maintaining clear navigation and accessible controls.
 
-Before submitting, replace the time-spent placeholder above with your own total.
 
 ## License
 
